@@ -10,7 +10,30 @@ PASV_ADDR_RESOLVE=${PASV_ADDR_RESOLVE:-NO}
 PASV_MIN_PORT=${PASV_MIN_PORT:-21100}
 PASV_MAX_PORT=${PASV_MAX_PORT:-21110}
 FTP_MODE=${FTP_MODE:-ftp}
-LOG_STDOUT=${LOG_STDOUT:-NO}
+LOG_STDOUT=${LOG_STDOUT:-YES}
+CERT_FILE_PATH=${CERT_FILE_PATH}
+KEY_FILE_PATH=${KEY_FILE_PATH}
+
+if [ -f "$CERT_FILE_PATH" ] && [ -f "$KEY_FILE_PATH" ]; then
+    echo "Found user certs"
+    mkdir -p /etc/vsftpd/custom-tls/
+    cp $CERT_FILE_PATH /etc/vsftpd/custom-tls/localhost.pem
+    cp $KEY_FILE_PATH /etc/vsftpd/custom-tls/localhost.key
+
+    chmod 600 /etc/vsftpd/custom-tls/localhost.pem
+    chown root:root /etc/vsftpd/custom-tls/localhost.pem
+
+    chmod 600 /etc/vsftpd/custom-tls/localhost.key
+    chown root:root /etc/vsftpd/custom-tls/localhost.key
+    ls -lah /etc/vsftpd/custom-tls/
+else
+    if ! [ -f "$CERT_FILE_PATH" ]; then
+        echo "Not found: $CERT_FILE_PATH"
+    fi
+    if ! [ -f "$KEY_FILE_PATH" ]; then
+        echo "Not found: $KEY_FILE_PATH"
+    fi
+fi
 
 # You can set PASV_ADDRESS_INTERFACE to the name of the interface you'd like to
 # bind to and this will look up the IP and set the proper PASV_ADDRESS value.
@@ -64,12 +87,6 @@ echo "pasv_min_port=$PASV_MIN_PORT" >> $VSFTPD_CONF
 export LOG_FILE=`grep ^vsftpd_log_file $VSFTPD_CONF | cut -d= -f2`
 
 cat << EOB
-  ********************************************************
-  *                                                      *
-  *    Docker image: lhauspie/vsftd-alpine               *
-  *    https://github.com/lhauspie/docker-vsftpd-alpine  *
-  *                                                      *
-  ********************************************************
 
   SERVER SETTINGS
   ---------------
@@ -84,6 +101,8 @@ cat << EOB
   . FTP_MODE: "${FTP_MODE}"
   . LOG_STDOUT: "${LOG_STDOUT}"
   . LOG_FILE: "${LOG_FILE}"
+  . CERT_FILE_PATH: ${CERT_FILE_PATH}
+  . KEY_FILE_PATH: ${KEY_FILE_PATH}
 EOB
 
 if [[ "${LOG_STDOUT}" == "YES" ]]; then

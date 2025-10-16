@@ -3,16 +3,16 @@ CONTAINER_NAME ?= vsftpd
 
 .PHONY: build
 build:
-	docker build . -t lhauspie/vsftpd-alpine -t lhauspie/vsftpd-alpine:${VERSION}
+	docker build . -t morarom/vsftpd-alpine -t morarom/vsftpd-alpine:${VERSION}
 
 .PHONY: 
 push:
-	docker push lhauspie/vsftpd-alpine
+	docker push morarom/vsftpd-alpine
 
 
 .PHONY: run
 run:
-	docker run -d --name ${CONTAINER_NAME} -p 20-22:20-22 -p 21100-21110:21100-21110 lhauspie/vsftpd-alpine:${VERSION}
+	docker run -d --name ${CONTAINER_NAME} -p 20-22:20-22 -p 21100-21110:21100-21110 morarom/vsftpd-alpine:${VERSION}
 
 
 .PHONY: start
@@ -32,7 +32,7 @@ clean-container:
 
 .PHONY: clean-images
 clean-images:
-	docker image rm lhauspie/vsftpd-alpine lhauspie/vsftpd-alpine:${VERSION}
+	docker image rm morarom/vsftpd-alpine morarom/vsftpd-alpine:${VERSION}
 
 
 .PHONY: clean-all
