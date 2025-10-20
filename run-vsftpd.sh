@@ -3,6 +3,8 @@
 # Define default values of Environment Variables
 FTP_USER=${FTP_USER:-user}
 FTP_PASS=${FTP_PASS:-pass}
+FTP_USER_UID=${FTP_USER_UID:-431}
+FTP_USER_GID=${FTP_USER_GID:-433}
 PASV_ENABLE=${PASV_ENABLE:-YES}
 PASV_ADDRESS=${PASV_ADDRESS:-}
 PASV_ADDRESS_INTERFACE=${PASV_ADDRESS_INTERFACE:-eth0}
@@ -53,8 +55,8 @@ else
 fi
 
 # Add the FTP_USER, change his password and declare him as the owner of his home folder and all subfolders
-addgroup -g 433 -S $FTP_USER
-adduser -u 431 -D -G $FTP_USER -h /home/vsftpd/$FTP_USER -s /bin/false  $FTP_USER
+addgroup -g $FTP_USER_GID -S $FTP_USER
+adduser -u $FTP_USER_UID -D -G $FTP_USER -h /home/vsftpd/$FTP_USER -s /bin/false  $FTP_USER
 echo "$FTP_USER:$FTP_PASS" | /usr/sbin/chpasswd
 chown -R $FTP_USER:$FTP_USER /home/vsftpd/
 
@@ -92,6 +94,8 @@ cat << EOB
   ---------------
   . FTP_USER: "${FTP_USER}"
   . FTP_PASS: "${FTP_PASS}"
+  . FTP_USER_UID="${FTP_USER_UID}"
+  . FTP_USER_GID="${FTP_USER_GID}"
   . PASV_ENABLE: "${PASV_ENABLE}"
   . PASV_ADDRESS: "${PASV_ADDRESS}"
   . PASV_ADDRESS_INTERFACE: "${PASV_ADDRESS_INTERFACE}"
