@@ -1,7 +1,8 @@
 # vsftpd-alpine
 
 [![Docker Pulls](https://img.shields.io/docker/pulls/morarom/vsftpd-alpine.svg?type=plastic&logo=docker)](https://hub.docker.com/r/morarom/vsftpd-alpine/)
-[![Docker Build Status](https://img.shields.io/docker/build/morarom/vsftpd-alpine.svg?type=plastic&logo=docker)](https://hub.docker.com/r/morarom/vsftpd-alpine/builds/)
+
+[//]: # ([![Docker Build Status]&#40;https://img.shields.io/docker/build/morarom/vsftpd-alpine.svg?type=plastic&logo=docker&#41;]&#40;https://hub.docker.com/r/morarom/vsftpd-alpine/builds/&#41;)
 
 A lightweight, flexible FTP/FTPS server based on Alpine Linux and vsftpd.
 
@@ -65,11 +66,13 @@ docker run -d \
   -p 21100-21110:21100-21110 \
   -e FTP_USER=myuser \
   -e FTP_PASS=mypassword \
-  -v $(pwd)/data:/home/myuser \
+  -v $(pwd)/data:/home/vsftpd/myuser \
   morarom/vsftpd-alpine:1.0.11
 ```
 
 Files in `./data` will be accessible via FTP, and uploads will appear in this directory.
+
+**Important**: The mount path must match the pattern `/home/vsftpd/{FTP_USER}` where `{FTP_USER}` is your username.
 
 ## Secure FTP (FTPS)
 
@@ -182,7 +185,7 @@ docker run -d \
   -e CERT_FILE_PATH=/etc/vsftpd/my-tls/server-cert.pem \
   -e KEY_FILE_PATH=/etc/vsftpd/my-tls/server-key.pem \
   -v $(pwd)/tls:/etc/vsftpd/my-tls \
-  -v $(pwd)/data:/home/myuser \
+  -v $(pwd)/data:/home/vsftpd/myuser \
   morarom/vsftpd-alpine:1.0.11
 ```
 
@@ -206,6 +209,8 @@ lftp -u myuser,mypassword -e "set ftp:ssl-force true; set ftp:ssl-protect-data t
 |----------|---------|-------------|
 | `FTP_USER` | `user` | FTP username |
 | `FTP_PASS` | `pass` | FTP password |
+| `FTP_USER_UID` | `431` | UID for the FTP user |
+| `FTP_USER_GID` | `433` | GID for the FTP user |
 
 ### Protocol Settings
 
@@ -253,10 +258,12 @@ Depending on the FTP mode, you need different port mappings:
 
 | Mode | Required Ports | Example |
 |------|----------------|---------|
-| `ftp` | 21, 20-22, 21100-21110 | `-p 21:21 -p 20-22:20-22 -p 21100-21110:21100-21110` |
-| `ftps` | 21, 20-22, 21100-21110 | `-p 21:21 -p 20-22:20-22 -p 21100-21110:21100-21110` |
+| `ftp` | 21, 21100-21110 | `-p 21:21 -p 21100-21110:21100-21110` |
+| `ftps` | 21, 21100-21110 | `-p 21:21 -p 21100-21110:21100-21110` |
 | `ftps_implicit` | 990, 21100-21110 | `-p 990:990 -p 21100-21110:21100-21110` |
-| `ftps_tls` | 21, 20-22, 21100-21110 | `-p 21:21 -p 20-22:20-22 -p 21100-21110:21100-21110` |
+| `ftps_tls` | 21, 21100-21110 | `-p 21:21 -p 21100-21110:21100-21110` |
+
+**Note**: Passive mode ports (21100-21110 by default) are always required for data transfer.
 
 ## Complete Example
 
@@ -270,6 +277,8 @@ docker run -d \
   -p 21100-21110:21100-21110 \
   -e FTP_USER=ftpuser \
   -e FTP_PASS=SecurePassword123! \
+  -e FTP_USER_UID=1000 \
+  -e FTP_USER_GID=1000 \
   -e FTP_MODE=ftps_implicit \
   -e PASV_ENABLE=YES \
   -e PASV_ADDRESS=your.server.ip.address \
@@ -279,7 +288,7 @@ docker run -d \
   -e KEY_FILE_PATH=/etc/vsftpd/my-tls/server-key.pem \
   -e LOG_STDOUT=YES \
   -v $(pwd)/tls:/etc/vsftpd/my-tls:ro \
-  -v $(pwd)/data:/home/ftpuser \
+  -v $(pwd)/data:/home/vsftpd/ftpuser \
   morarom/vsftpd-alpine:1.0.11
 ```
 
@@ -307,16 +316,23 @@ docker logs vsftpd
 ### File upload/download fails
 
 Ensure:
-1. Volume is mounted correctly
+1. Volume is mounted correctly to `/home/vsftpd/{FTP_USER}`
 2. User has write permissions
 3. Both control and data connections are allowed through firewall
+
+### Permission issues
+
+If you encounter permission errors:
+1. Set `FTP_USER_UID` and `FTP_USER_GID` to match your host user
+2. Ensure the mounted directory has appropriate permissions
+3. Check ownership with: `ls -la $(pwd)/data`
 
 ## Building from Source
 
 Clone the repository and build:
 
 ```bash
-git clone https://github.com/yourusername/vsftpd-alpine.git
+git clone https://github.com/morabatur/docker-vsftpd-alpine.git
 cd vsftpd-alpine
 make build
 ```
