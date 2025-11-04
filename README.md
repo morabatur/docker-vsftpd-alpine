@@ -19,6 +19,7 @@ A lightweight, flexible FTP/FTPS server based on Alpine Linux and vsftpd.
 - **Custom certificates**: Bring your own TLS/SSL certificates
 - **Simple configuration**: Environment variable based setup
 - **Docker native**: Easy logging and volume mounting
+- **Connection limits**: Configurable max clients and connections per IP
 
 ## Quick Start
 
@@ -224,6 +225,13 @@ lftp -u myuser,mypassword -e "set ftp:ssl-force true; set ftp:ssl-protect-data t
 - `ftps_implicit` - Implicit FTPS, encrypted from start (port 990) - **requires certificates**
 - `ftps_tls` - FTPS with enforced strong TLS encryption (port 21) - **requires certificates**
 
+### Connection Limits
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `MAX_CLIENTS` | `10` | Maximum number of simultaneous client connections |
+| `MAX_PER_IP` | `5` | Maximum number of connections from the same IP address |
+
 ### Passive Mode Settings
 
 | Variable | Default | Description |
@@ -284,6 +292,8 @@ docker run -d \
   -e PASV_ADDRESS=your.server.ip.address \
   -e PASV_MIN_PORT=21100 \
   -e PASV_MAX_PORT=21110 \
+  -e MAX_CLIENTS=50 \
+  -e MAX_PER_IP=10 \
   -e CERT_FILE_PATH=/etc/vsftpd/my-tls/server-cert.pem \
   -e KEY_FILE_PATH=/etc/vsftpd/my-tls/server-key.pem \
   -e LOG_STDOUT=YES \
@@ -326,6 +336,13 @@ If you encounter permission errors:
 1. Set `FTP_USER_UID` and `FTP_USER_GID` to match your host user
 2. Ensure the mounted directory has appropriate permissions
 3. Check ownership with: `ls -la $(pwd)/data`
+
+### Too many connections
+
+If you're experiencing connection limits:
+1. Increase `MAX_CLIENTS` to allow more simultaneous connections
+2. Adjust `MAX_PER_IP` if multiple connections from the same IP are needed
+3. Monitor server resources to ensure it can handle the increased load
 
 ## Building from Source
 
